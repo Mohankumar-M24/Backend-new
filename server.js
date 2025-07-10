@@ -6,31 +6,47 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 
 dotenv.config();
+
 const app = express();
 
-// Middleware
+// ✅ CORS middleware
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.FRONTEND_URL, // e.g., https://courageous-horse-18f999.netlify.app
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('❌ Not allowed by CORS'));
+    }
+  },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+
+// ✅ Body parser & cookies
 app.use(express.json());
 app.use(cookieParser());
 
-//  Serve static files (e.g. uploaded images)
+// ✅ Serve static images (e.g. product uploads)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-//  Root route (prevents "Cannot GET /")
+// ✅ Root route for sanity check
 app.get('/', (req, res) => {
-  res.send(' Welcome to the E-Commerce API (Backend)');
+  res.send('✅ Welcome to the E-Commerce API (Backend)');
 });
 
-//  Health check
+// ✅ Health check route for frontend to ping
 app.get('/api/health', (req, res) => {
-  res.send(' Backend is live');
+  res.send('✅ Backend is live');
 });
 
-//  API Routes
+// ✅ API routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/user'));
 app.use('/api/profile', require('./routes/profile'));
@@ -41,14 +57,16 @@ app.use('/api/seller', require('./routes/sellerRoutes'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/store', require('./routes/store'));
 
-//  Connect to MongoDB
+// ✅ Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log(' MongoDB connected'))
-  .catch((err) => console.error(' MongoDB error:', err));
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-//  Start the server
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
