@@ -12,7 +12,7 @@ const app = express();
 // ✅ CORS middleware
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://effervescent-muffin-f69cf4.netlify.app', // e.g., https://courageous-horse-18f999.netlify.app
+  'https://unique-yeot-c1eed6.netlify.app/', // e.g., https://courageous-horse-18f999.netlify.app
 ];
 
 app.use(cors({
