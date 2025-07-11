@@ -20,7 +20,7 @@ if (!fs.existsSync(uploadsDir)) {
 // ✅ CORS middleware
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://unique-yeot-c1eed6.netlify.app', // your Netlify domain
+  'https://darling-crepe-d0d438.netlify.app', // your Netlify domain
 ];
 
 app.use(cors({

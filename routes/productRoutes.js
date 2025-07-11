@@ -47,7 +47,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     await product.save();
     res.status(201).json(product);
   } catch (err) {
-    console.error('❌ Error creating product:', err);
+    console.error(' Error creating product:', err);
     res.status(500).json({ error: err.message || 'Failed to create product' });
   }
 });
@@ -79,7 +79,7 @@ router.get('/', async (req, res) => {
     const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
   } catch (err) {
-    console.error('❌ Error fetching products:', err);
+    console.error(' Error fetching products:', err);
     res.status(500).json({ message: err.message || 'Server error' });
   }
 });
@@ -95,7 +95,7 @@ router.get('/:id', async (req, res) => {
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
-    console.error('❌ Error fetching product:', err);
+    console.error(' Error fetching product:', err);
     res.status(500).json({ error: err.message || 'Failed to fetch product details' });
   }
 });
