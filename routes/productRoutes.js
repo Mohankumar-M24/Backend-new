@@ -33,7 +33,7 @@ router.post('/', upload.single('image'), async (req, res) => {
 
     const image = req.file ? `/uploads/${req.file.filename}` : '';
 
-    const sellerId = mongoose.Types.ObjectId(seller);
+    const sellerId = new mongoose.Types.ObjectId(seller);
 
     const product = new Product({
       name,
