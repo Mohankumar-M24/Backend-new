@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const { authenticateUser } = require('../middleware/auth');
 const multer = require('multer');
@@ -23,15 +24,31 @@ const upload = multer({ storage });
  * @access  Private (seller)
  */
 router.post('/', upload.single('image'), async (req, res) => {
-  const { name, description, price, category, seller } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : '';
-
   try {
-    const product = new Product({ name, description, price, category, seller, image });
+    const { name, description, price, category, seller } = req.body;
+
+    if (!name || !price || !category || !seller) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const image = req.file ? `/uploads/${req.file.filename}` : '';
+
+    const sellerId = mongoose.Types.ObjectId(seller);
+
+    const product = new Product({
+      name,
+      description,
+      price,
+      category,
+      seller: sellerId,
+      image
+    });
+
     await product.save();
     res.status(201).json(product);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create product' });
+    console.error('❌ Error creating product:', err);
+    res.status(500).json({ error: err.message || 'Failed to create product' });
   }
 });
 
@@ -59,13 +76,11 @@ router.get('/', async (req, res) => {
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
 
-    console.log(' Filter used:', filter);
-
     const products = await Product.find(filter).sort({ createdAt: -1 });
     res.json(products);
   } catch (err) {
-    console.error(' Error fetching products:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Error fetching products:', err);
+    res.status(500).json({ message: err.message || 'Server error' });
   }
 });
 
@@ -80,7 +95,8 @@ router.get('/:id', async (req, res) => {
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch product details' });
+    console.error('❌ Error fetching product:', err);
+    res.status(500).json({ error: err.message || 'Failed to fetch product details' });
   }
 });
 
@@ -110,8 +126,8 @@ router.put('/:id', authenticateUser, upload.single('image'), async (req, res) =>
     await product.save();
     res.json({ message: 'Product updated successfully', product });
   } catch (err) {
-    console.error(' Update error:', err);
-    res.status(500).json({ error: 'Failed to update product' });
+    console.error('❌ Error updating product:', err);
+    res.status(500).json({ error: err.message || 'Failed to update product' });
   }
 });
 
@@ -123,7 +139,6 @@ router.put('/:id', authenticateUser, upload.single('image'), async (req, res) =>
 router.delete('/:id', authenticateUser, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
     if (!product.seller || product.seller.toString() !== req.user._id) {
@@ -132,10 +147,9 @@ router.delete('/:id', authenticateUser, async (req, res) => {
 
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: 'Product deleted successfully' });
-
   } catch (err) {
-    console.error(' Delete error:', err);
-    res.status(500).json({ error: 'Failed to delete product', details: err.message });
+    console.error('❌ Error deleting product:', err);
+    res.status(500).json({ error: err.message || 'Failed to delete product' });
   }
 });
 
@@ -147,7 +161,6 @@ router.delete('/:id', authenticateUser, async (req, res) => {
 router.post('/:id/reviews', authenticateUser, async (req, res) => {
   try {
     const { rating, comment } = req.body;
-
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
@@ -158,7 +171,6 @@ router.post('/:id/reviews', authenticateUser, async (req, res) => {
       return res.status(400).json({ message: 'You have already reviewed this product' });
     }
 
-    
     const user = await require('../models/User').findById(req.user._id);
 
     const newReview = {
@@ -177,8 +189,8 @@ router.post('/:id/reviews', authenticateUser, async (req, res) => {
 
     res.status(201).json({ message: 'Review added successfully' });
   } catch (err) {
-    console.error(' Review error:', err);
-    res.status(500).json({ error: 'Failed to add review' });
+    console.error('❌ Error adding review:', err);
+    res.status(500).json({ error: err.message || 'Failed to add review' });
   }
 });
 
